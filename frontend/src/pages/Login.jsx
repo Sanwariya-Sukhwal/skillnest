@@ -18,13 +18,19 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const result = await login(email, password);
+  const result = await login(email, password);
 
-    if (result.success) {
-      navigate('/dashboard');
+  if (result.success) {
+    const savedUser = JSON.parse(localStorage.getItem('user'));
+
+    if (savedUser?.role === 'admin') {
+      navigate('/admin');
     } else {
-      setError(result.message);
+      navigate('/dashboard');
     }
+  } else {
+    setError(result.message);
+  }
 
     setLoading(false);
   };

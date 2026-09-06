@@ -12,6 +12,8 @@ import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 import ProtectedRoute from './routes/ProtectedRoute';
 
+import AdminLayout from './layouts/AdminLayout';
+
 // Pages
 import Home from './pages/Home';
 import Courses from './pages/Courses';
@@ -21,14 +23,15 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminCourses from './pages/AdminCourses';
+import AdminEnrollments from './pages/AdminEnrollments';
+import AdminUsers from './pages/AdminUsers';
 
 const AppLayout = () => {
   const location = useLocation();
 
-  // Admin page ke liye normal Navbar/Footer hide
   const isAdminPage = location.pathname.startsWith('/admin');
 
-  // Login/Register par bhi Navbar/Footer hide
   const isAuthPage =
     location.pathname === '/login' ||
     location.pathname === '/register';
@@ -41,45 +44,14 @@ const AppLayout = () => {
 
       <Routes>
 
-        {/* ================= HOME ================= */}
+        {/* ================= PUBLIC ROUTES ================= */}
 
-        <Route
-          path="/"
-          element={<Home />}
-        />
-
-        {/* ================= COURSES ================= */}
-
-        <Route
-          path="/courses"
-          element={<Courses />}
-        />
-
-        {/* ================= EXPLORE COURSES ================= */}
-
-        <Route
-          path="/explore-courses"
-          element={<ExploreCourses />}
-        />
-
-        {/* ================= COURSE DETAIL ================= */}
-
-        <Route
-          path="/courses/:id"
-          element={<CourseDetail />}
-        />
-
-        {/* ================= AUTH ================= */}
-
-        <Route
-          path="/login"
-          element={<Login />}
-        />
-
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        <Route path="/" element={<Home />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/explore-courses" element={<ExploreCourses />} />
+        <Route path="/courses/:id" element={<CourseDetail />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* ================= USER DASHBOARD ================= */}
 
@@ -92,16 +64,21 @@ const AppLayout = () => {
           }
         />
 
-        {/* ================= ADMIN DASHBOARD ================= */}
+        {/* ================= ADMIN ROUTES ================= */}
 
         <Route
           path="/admin"
           element={
             <ProtectedRoute requiredRole="admin">
-              <AdminDashboard />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="courses" element={<AdminCourses />} />
+          <Route path="enrollments" element={<AdminEnrollments />} />
+          <Route path="users" element={<AdminUsers />} />
+        </Route>
 
         {/* ================= 404 ================= */}
 

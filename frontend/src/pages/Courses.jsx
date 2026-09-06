@@ -108,12 +108,6 @@ const Courses = () => {
                   Explore Courses
                 </Link>
 
-                <button
-                  type="button"
-                  className="bg-white border border-[#E2E8F0] text-[#0F172A] text-[10px] font-semibold px-4 py-2.5 rounded-[6px] hover:border-[#6366F1] transition"
-                >
-                  How it works
-                </button>
 
               </div>
 

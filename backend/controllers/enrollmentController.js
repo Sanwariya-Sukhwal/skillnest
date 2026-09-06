@@ -8,26 +8,27 @@ exports.enrollCourse = async (req, res) => {
     const { courseId } = req.body;
     const userId = req.user.id;
 
-    // Validation
     if (!courseId) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Please provide course ID' });
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide course ID',
+      });
     }
 
-    // Check if course exists
     const course = await Course.findById(courseId);
+
     if (!course) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Course not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found',
+      });
     }
 
-    // Check if already enrolled
     const existingEnrollment = await Enrollment.findOne({
       userId,
       courseId,
     });
+
     if (existingEnrollment) {
       return res.status(400).json({
         success: false,
@@ -35,13 +36,11 @@ exports.enrollCourse = async (req, res) => {
       });
     }
 
-    // Create enrollment
     const enrollment = await Enrollment.create({
       userId,
       courseId,
     });
 
-    // Increment enrolled count
     course.enrolledCount += 1;
     await course.save();
 
@@ -50,21 +49,25 @@ exports.enrollCourse = async (req, res) => {
       data: enrollment,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: error.message || 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
   }
 };
 
-// @desc    Get user enrollments
-// @route   GET /api/enrollments/my-courses
-exports.getMyEnrollments = async (req, res) => {
-  try {
-    const userId = req.user.id;
 
-    const enrollments = await Enrollment.find({ userId }).populate(
-      'courseId'
-    );
+// @desc    Get all enrollments - Admin
+// @route   GET /api/enrollments
+exports.getAllEnrollments = async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find()
+      .populate('userId', 'name email role')
+      .populate(
+        'courseId',
+        'title instructor price category image'
+      )
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -72,24 +75,50 @@ exports.getMyEnrollments = async (req, res) => {
       data: enrollments,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: error.message || 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
   }
 };
+
+
+// @desc    Get user enrollments
+// @route   GET /api/enrollments/my-courses
+exports.getMyEnrollments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const enrollments = await Enrollment.find({ userId })
+      .populate('courseId');
+
+    res.status(200).json({
+      success: true,
+      count: enrollments.length,
+      data: enrollments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
+  }
+};
+
 
 // @desc    Get single enrollment
 // @route   GET /api/enrollments/:id
 exports.getEnrollment = async (req, res) => {
   try {
     const enrollment = await Enrollment.findById(req.params.id)
-      .populate('userId')
+      .populate('userId', 'name email role')
       .populate('courseId');
 
     if (!enrollment) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Enrollment not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Enrollment not found',
+      });
     }
 
     res.status(200).json({
@@ -97,13 +126,15 @@ exports.getEnrollment = async (req, res) => {
       data: enrollment,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: error.message || 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
   }
 };
 
-// @desc    Update enrollment progress
+
+// @desc    Update enrollment progress/status
 // @route   PUT /api/enrollments/:id
 exports.updateEnrollment = async (req, res) => {
   try {
@@ -112,9 +143,10 @@ exports.updateEnrollment = async (req, res) => {
     let enrollment = await Enrollment.findById(req.params.id);
 
     if (!enrollment) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Enrollment not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Enrollment not found',
+      });
     }
 
     if (progress !== undefined) {
@@ -123,6 +155,7 @@ exports.updateEnrollment = async (req, res) => {
 
     if (status !== undefined) {
       enrollment.status = status;
+
       if (status === 'completed') {
         enrollment.completedAt = Date.now();
       }
@@ -135,26 +168,31 @@ exports.updateEnrollment = async (req, res) => {
       data: enrollment,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: error.message || 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
   }
 };
+
 
 // @desc    Delete enrollment
 // @route   DELETE /api/enrollments/:id
 exports.deleteEnrollment = async (req, res) => {
   try {
-    const enrollment = await Enrollment.findByIdAndDelete(req.params.id);
+    const enrollment = await Enrollment.findByIdAndDelete(
+      req.params.id
+    );
 
     if (!enrollment) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Enrollment not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Enrollment not found',
+      });
     }
 
-    // Decrement enrolled count
     const course = await Course.findById(enrollment.courseId);
+
     if (course && course.enrolledCount > 0) {
       course.enrolledCount -= 1;
       await course.save();
@@ -165,8 +203,9 @@ exports.deleteEnrollment = async (req, res) => {
       data: {},
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: error.message || 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
   }
 };
